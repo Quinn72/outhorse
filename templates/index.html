@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Out Horse your email</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <h1>Out horse your email</h1>
+    <h2>Our Vision</h2>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/kbfD_lX1Tog" frameborder="0" allowfullscreen></iframe>
+    <h2>how long should the horse type for?</h2>
+
+    <form id="randomForm">
+        <div id="timerContainer"></div>
+
+        <label for="length">Enter the length of characters required:</label>
+        <input type="number" id="length" name="length" required>
+        <button type="button" onclick="generateRandomString()">Generate</button>
+
+        <!-- Button to copy generated string to clipboard -->
+        <button type="button" onclick="copyToClipboard()">Copy to Clipboard</button>
+    </form>
+
+    <div id="resultBox">
+        {% if random_str %}
+            <p>Wait time: <span id="waitTime">{{ random_str }}</span> seconds</p>
+            <p>The horse's email has been generated: <span id="generatedString">{{ random_str }}</span></p>
+        {% endif %}
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+        function generateRandomString() {
+            var length = $('#length').val();
+            var timerContainer = $('#timerContainer');
+            timerContainer.empty(); // Clear previous content
+
+            // Start the timer
+            var startTime = new Date().getTime();
+            var timerInterval = setInterval(function () {
+                var currentTime = new Date().getTime();
+                var elapsedTime = Math.floor((currentTime - startTime) / 1000); // in seconds
+                timerContainer.text('Wait time: ' + elapsedTime + ' seconds');
+            }, 1000); // update every second
+
+            $.ajax({
+                type: 'POST',
+                url: '/generate',
+                data: { length: length },
+                success: function (response) {
+                    clearInterval(timerInterval); // Stop the timer
+                    var resultBox = $('#resultBox');
+                    resultBox.html('<p>Wait time: ' + response.result.wait_time + ' seconds</p>' +
+                        '<p>The horse\'s email has been generated: <span id="generatedString">' + response.result.random_str + '</span></p>');
+                },
+                error: function (response) {
+                    clearInterval(timerInterval); // Stop the timer
+                    console.error(response.error);
+                }
+            });
+        }
+
+        // Trigger the generateRandomString function when Enter key is pressed
+        $('#length').keypress(function (e) {
+            if (e.which === 13) {
+                e.preventDefault();  // Prevent the default form submission behavior
+                generateRandomString();
+            }
+        });
+
+        // Function to copy generated string to clipboard
+        function copyToClipboard() {
+            var generatedString = $('#generatedString').text();
+            var tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.setAttribute('value', generatedString);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+        }
+    </script>
+
+</body>
+
+</html>
